@@ -321,42 +321,40 @@ projects = [
 ]
 
 # --- DASHBOARD UI ---
-st.title("🏗️ Post Tender Management Dashboard System")
+st.title("🏗️ Post Tender Management Dashboard")
 st.markdown("---")
 
-# DataFrame index setup (1 se start karne ke liye)
+# DataFrame index setup
 df_home = pd.DataFrame(projects)
 df_home.index = range(1, len(df_home) + 1)
 
-# Seedha Table wala Section shuru
+# --- NEW: PROJECT SELECTION ---
+st.subheader("🔍 Select Project to View Details")
+selected_project = st.selectbox("Detailed data dekhne ke liye project chunein:", ["-- Select a Project --"] + df_home["Project Name"].tolist())
+
+st.markdown("---")
 st.subheader("📌 Master Project List")
 
 # Columns jo dikhane hain
 display_columns = [
     "Project Name", "Type of Contractor", "Area", 
     "Original BOQ Amount", "Original Budget", 
-    "Last Revised Budget", "Client Bill Amount", "Consumed Amount"
+    "Total Revised Budget", "Client Bill Amount", "Consumed Amount"
 ]
 
-# --- STATUS TEXT COLOURING (Pills/Background Hatane ke liye) ---
+# --- STATUS TEXT COLOURING ---
 def format_contractor(val):
-    # Sirf text ka color change hoga, background white hi rahega
-    if val == "Lumpsum": 
-        color = "#FFB433"  # Dark Gold/Brass (White background par saaf dikhega)
-    elif val == "Item rate": 
-        color = "#48A111"  # Dark Green
-    else: 
-        color = "#1C4D8D"  # Dark Royal Blue (EPC ke liye)
-        
+    if val == "Lumpsum": color = "#FFB433"
+    elif val == "Item rate": color = "#48A111"
+    else: color = "#1C4D8D"
     return f'color: {color}; font-weight: bold; background-color: white;'
 
 # --- TABLE DISPLAY ---
-# Baaki styling aur format same rahega
 styled_df = df_home[display_columns].style.map(format_contractor, subset=["Type of Contractor"]) \
             .format({
                 "Original BOQ Amount": "₹{:,.0f}", 
                 "Original Budget": "₹{:,.0f}", 
-                "Last Revised Budget": "₹{:,.0f}",
+                "Total Revised Budget": "₹{:,.0f}",
                 "Client Bill Amount": "₹{:,.0f}",
                 "Consumed Amount": "₹{:,.0f}"
             })
@@ -366,3 +364,57 @@ st.dataframe(
     use_container_width=True, 
     height=(len(df_home) + 1) * 35 + 40
 )
+
+# --- 3. GOOGLE SHEET DATA INTEGRATION (HIGHLIGHT TOTAL ROW) ---
+if selected_project != "-- Select a Project --":
+    st.markdown("---")
+    st.subheader(f"📊 Detailed View: {selected_project}")
+    
+    row = df_home[df_home["Project Name"] == selected_project].iloc[0]
+    raw_url = row.get("Sheet_Link") if row.get("Sheet_Link") else row.get("Sheet_ID", "")
+    
+    if raw_url and "docs.google.com" in raw_url:
+        try:
+            csv_url = raw_url.split("/edit")[0] + "/export?format=csv" if "/edit" in raw_url else raw_url
+            df_detail = pd.read_csv(csv_url, skiprows=5)
+
+            def find_column(search_term, columns):
+                for col in columns:
+                    if search_term.lower() in col.lower(): return col
+                return None
+
+            mapping = {
+                "Sr.No": find_column("Sr.No", df_detail.columns),
+                "Item Description": find_column("Item Description", df_detail.columns),
+                "Original Budget": find_column("Original Budget", df_detail.columns),
+                "Revised Budget": find_column("Total Revised Budget", df_detail.columns),
+                "BOQ Amount": find_column("Original BOQ Amount", df_detail.columns),
+                "Client Bill": find_column("Cummulative Client Bill", df_detail.columns),
+                "Consumed Amount": find_column("Consumed Amount", df_detail.columns)
+            }
+
+            final_columns = [v for k, v in mapping.items() if v is not None]
+
+            if final_columns:
+                display_df = df_detail[final_columns].copy()
+                
+                # 🛠️ UPDATED HIGHLIGHT LOGIC FOR BACKGROUND COLOUR 🛠️
+                def highlight_total_row_background(row):
+                    # Item Description mein "Total Project" dhoondo
+                    desc_col = mapping["Item Description"]
+                    if desc_col and isinstance(row[desc_col], str) and "Total Project" in row[desc_col]:
+                        # 🟢 Green background, white text, bold font puri row ke liye
+                        return ['background-color: #D4EDDA; color: #155724; font-weight: bold; border-color: #C3E6CB'] * len(row)
+                    return [''] * len(row)
+
+                # Styling apply karte waqt axis=1 zaroor rakhein
+                styled_df = display_df.style.apply(highlight_total_row_background, axis=1)
+                
+                # Table display karein
+                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                st.success(f"✅ Data loaded! Total row highlighted.")
+            else:
+                st.warning("⚠️ Headers nahi mil rahe.")
+
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
