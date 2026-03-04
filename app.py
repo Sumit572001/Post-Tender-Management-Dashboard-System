@@ -330,8 +330,14 @@ df_home.index = range(1, len(df_home) + 1)
 
 # --- NEW: PROJECT SELECTION ---
 st.subheader("🔍 Select Project to View Details")
-selected_project = st.selectbox("Detailed data dekhne ke liye project chunein:", ["-- Select a Project --"] + df_home["Project Name"].tolist())
 
+# Aapne kaha tha ki "Detailed data dekhne ke liye project chunein:" wali line nahi chahiye, 
+# isliye label ko khali ("") kar diya hai.
+selected_project = st.selectbox(
+    label="", 
+    options=["-- Select a Project --"] + df_home["Project Name"].tolist(),
+    label_visibility="collapsed"  # Isse label ki jagah bhi nahi gheraga
+)
 st.markdown("---")
 st.subheader("📌 Master Project List")
 
