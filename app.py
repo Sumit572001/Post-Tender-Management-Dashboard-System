@@ -338,6 +338,7 @@ selected_project = st.selectbox(
     options=["-- Select a Project --"] + df_home["Project Name"].tolist(),
     label_visibility="collapsed"  # Isse label ki jagah bhi nahi gheraga
 )
+
 st.markdown("---")
 st.subheader("📌 Master Project List")
 
@@ -371,56 +372,69 @@ st.dataframe(
     height=(len(df_home) + 1) * 35 + 40
 )
 
-# --- 3. GOOGLE SHEET DATA INTEGRATION (HIGHLIGHT TOTAL ROW) ---
+# --- 3. UNIVERSAL DYNAMIC SHEET INTEGRATION ---
 if selected_project != "-- Select a Project --":
     st.markdown("---")
     st.subheader(f"📊 Detailed View: {selected_project}")
     
     row = df_home[df_home["Project Name"] == selected_project].iloc[0]
-    raw_url = row.get("Sheet_Link") if row.get("Sheet_Link") else row.get("Sheet_ID", "")
+    raw_url = row.get("Sheet_Link")
     
     if raw_url and "docs.google.com" in raw_url:
         try:
-            csv_url = raw_url.split("/edit")[0] + "/export?format=csv" if "/edit" in raw_url else raw_url
-            df_detail = pd.read_csv(csv_url, skiprows=5)
+            csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
+            
+            # Step 1: Pehle 20 rows read karo headers dhoondne ke liye
+            temp_df = pd.read_csv(csv_url, header=None, nrows=20)
+            
+            header_row = 0
+            for i, r in temp_df.iterrows():
+                # Agar row mein 'Sr.' aur 'Particular' ya 'Description' dikhe toh wo header hai
+                row_values = [str(x).lower() for x in r.values]
+                if any("sr." in s for s in row_values) and any("particular" in s or "description" in s for s in row_values):
+                    header_row = i
+                    break
+            
+            # Step 2: Sahi header row se data load karo
+            df_detail = pd.read_csv(csv_url, skiprows=header_row)
+            
+            # Clean column names (Remove newlines and extra spaces)
+            df_detail.columns = [str(c).replace('\n', ' ').strip() for c in df_detail.columns]
 
-            def find_column(search_term, columns):
-                for col in columns:
-                    if search_term.lower() in col.lower(): return col
+            # Step 3: Flexible Column Finder (Har sheet ke liye)
+            def find_col(possible_names):
+                for col in df_detail.columns:
+                    if any(name.lower() in col.lower() for name in possible_names):
+                        return col
                 return None
 
             mapping = {
-                "Sr.No": find_column("Sr.No", df_detail.columns),
-                "Item Description": find_column("Item Description", df_detail.columns),
-                "Original Budget": find_column("Original Budget", df_detail.columns),
-                "Revised Budget": find_column("Total Revised Budget", df_detail.columns),
-                "BOQ Amount": find_column("Original BOQ Amount", df_detail.columns),
-                "Client Bill": find_column("Cummulative Client Bill", df_detail.columns),
-                "Consumed Amount": find_column("Consumed Amount", df_detail.columns)
+                "Sr.No": find_col(["Sr. No", "Sr.No", "Sl.No"]),
+                "Description": find_col(["Particular", "Description", "Items"]),
+                "Original Budget": find_col(["Original Budget", "Orignal Budget", "ESTIMATION ZERO COST"]),
+                "Revised Budget": find_col(["Total Revised Budget", "TENDER ZERO COST"]),
+                "BOQ Amount": find_col(["Original BOQ Amount", "ZERO AMOUNT"]),
+                "Client Bill": find_col(["Client Bill", "Cummulative Client"]),
+                "Consumed Amount": find_col(["Consumed Amount", "Consumed Budget"])
             }
 
-            final_columns = [v for k, v in mapping.items() if v is not None]
+            selected_cols = [v for k, v in mapping.items() if v is not None]
 
-            if final_columns:
-                display_df = df_detail[final_columns].copy()
+            if len(selected_cols) > 2:
+                final_df = df_detail[selected_cols].copy()
                 
-                # 🛠️ UPDATED HIGHLIGHT LOGIC FOR BACKGROUND COLOUR 🛠️
-                def highlight_total_row_background(row):
-                    # Item Description mein "Total Project" dhoondo
-                    desc_col = mapping["Item Description"]
-                    if desc_col and isinstance(row[desc_col], str) and "Total Project" in row[desc_col]:
-                        # 🟢 Green background, white text, bold font puri row ke liye
-                        return ['background-color: #D4EDDA; color: #155724; font-weight: bold; border-color: #C3E6CB'] * len(row)
+                # Styling
+                def row_style(row):
+                    desc_col = mapping["Description"]
+                    if desc_col and "TOTAL" in str(row[desc_col]).upper():
+                        return ['background-color: #28a745; color: white; font-weight: bold;'] * len(row)
                     return [''] * len(row)
 
-                # Styling apply karte waqt axis=1 zaroor rakhein
-                styled_df = display_df.style.apply(highlight_total_row_background, axis=1)
-                
-                # Table display karein
-                st.dataframe(styled_df, use_container_width=True, hide_index=True)
-                st.success(f"✅ Data loaded! Total row highlighted.")
+                st.dataframe(final_df.style.apply(row_style, axis=1), use_container_width=True, hide_index=True)
+                st.success(f"✅ Auto-detected format and loaded data for {selected_project}")
             else:
-                st.warning("⚠️ Headers nahi mil rahe.")
+                st.warning("⚠️ Column names detect nahi ho pa rahe hain. Sheet ka header check karein.")
+                st.write("Ditected Columns:", df_detail.columns.tolist())
 
         except Exception as e:
-            st.error(f"❌ Error: {e}")
+            st.error(f"❌ Sheet Load Error: {e}")
