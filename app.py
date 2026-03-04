@@ -134,13 +134,13 @@ projects = [
     {
         "Project Name": "MEDICAL COLLEGE MUNGER",
         "Type of Contractor": "Item rate",
-        "Area": "0",
+        "Area": 0,
         "Original BOQ Amount": 0,
-        "Original Budget": 0,
+        "Original Budget": 4754076309,
         "Total Revised Budget": 0,
         "Client Bill Amount": 0,
         "Consumed Amount": 0,
-        "Sheet_Link": "ID_MUNGER"
+        "Sheet_Link": "https://docs.google.com/spreadsheets/d/1dfN4irDAWO_RRzvo2rNB844OEMi7o-GuAEQenXc5-nY/edit?usp=sharing"
     },
     {
         "Project Name": "MEDICAL COLLEGE SATARA",
@@ -156,35 +156,35 @@ projects = [
     {
         "Project Name": "POLICE HOUSING KANDIVALI",
         "Type of Contractor": "Lumpsum",
-        "Area": "0",
-        "Original BOQ Amount": 0,
-        "Original Budget": 0,
-        "Total Revised Budget": 0,
+        "Area":  71801,
+        "Original BOQ Amount": 1989235222.30,
+        "Original Budget": 3202892275.83,
+        "Total Revised Budget": 2118577309.09,
         "Client Bill Amount": 0,
         "Consumed Amount": 0,
-        "Sheet_Link": "ID_KANDIVALI"
+        "Sheet_Link": "https://docs.google.com/spreadsheets/d/1rclVTwxgLKL45TF0JLJfCmskA9fDKXx4eb7gRpYLVxA/edit?usp=sharing"
     },
     {
         "Project Name": "RATNAGIRI AIR TERMINAL",
         "Type of Contractor": "EPC",
-        "Area": "0",
-        "Original BOQ Amount": 0,
-        "Original Budget": 0,
-        "Total Revised Budget": 0,
+        "Area": 4900,
+        "Original BOQ Amount": 555633790 ,
+        "Original Budget": 591843869,
+        "Total Revised Budget": 490145615,
         "Client Bill Amount": 0,
         "Consumed Amount": 0,
-        "Sheet_Link": "ID_RAT_AIR"
+        "Sheet_Link": "https://docs.google.com/spreadsheets/d/13TLSTX6YYcWinDHkpRKaedq9OqtJFt0Xw9IU9LSbkoY/edit?usp=sharing"
     },
     {
         "Project Name": "PLATFORM BEUTIFICATION",
         "Type of Contractor": "Item rate",
-        "Area": "0",
-        "Original BOQ Amount": 0,
-        "Original Budget": 0,
-        "Total Revised Budget": 0,
+        "Area": 0,
+        "Original BOQ Amount": 389863792,
+        "Original Budget": 380895649,
+        "Total Revised Budget": 384598873,
         "Client Bill Amount": 0,
-        "Consumed Amount": 0,
-        "Sheet_Link": "ID_PLATFORM"
+        "Consumed Amount": 120577963,
+        "Sheet_Link": "https://docs.google.com/spreadsheets/d/10ggGX0YSWQ6f-DFbdNar0sYK6cr37OY9X9qedOhDi0o/edit?usp=sharing"
     },
     {
         "Project Name": "RATNAGIRI RAILWAY STATION",
