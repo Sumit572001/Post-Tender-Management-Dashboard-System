@@ -112,13 +112,13 @@ projects = [
     {
         "Project Name": "INCUBATION CENTER KALAMBOLI",
         "Type of Contractor": "Item rate",
-        "Area": "0",
-        "Original BOQ Amount": 0,
-        "Original Budget": 0,
-        "Last Revised Budget": 0,
+        "Area": 69677,
+        "Original BOQ Amount": 6405401141,
+        "Original Budget": 6195118021,
+        "Total Revised Budget": 6195118021,
         "Client Bill Amount": 0,
-        "Consumed Amount": 0,
-        "Sheet_ID": "ID_INC_KAL"
+        "Consumed Amount": 678730011,
+        "Sheet_Link": "https://docs.google.com/spreadsheets/d/1sgtzzcx32ZpiBpVJTIADtKpNfim4R-UJyRmQrFqFKIY/edit?usp=sharing"
     },
     {
         "Project Name": "KHAJAJI NAIK",
