@@ -69,13 +69,13 @@ st.markdown("""
         display: flex !important;
         justify-content: center !important; 
         align-items: center !important;
-        gap: 60px !important; 
+        gap: 40px !important; 
         width: 100% !important;
     }
 
     div.stButton > button {
-        width: 580px !important; 
-        height: 280px !important; 
+        width: 650px !important; 
+        height: 300px !important; 
         border-radius: 35px !important;
         border: 6px solid #002366 !important; 
         background-color: #f0f2f6 !important;
@@ -84,7 +84,7 @@ st.markdown("""
     }
 
     div.stButton > button p {
-        font-size: 40px !important; 
+        font-size: 50px !important; 
         font-weight: 700 !important;
     }
 
