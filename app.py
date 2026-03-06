@@ -74,8 +74,8 @@ st.markdown("""
     }
 
     div.stButton > button {
-        width: 480px !important; 
-        height: 250px !important; 
+        width: 580px !important; 
+        height: 280px !important; 
         border-radius: 35px !important;
         border: 6px solid #002366 !important; 
         background-color: #f0f2f6 !important;
@@ -84,7 +84,7 @@ st.markdown("""
     }
 
     div.stButton > button p {
-        font-size: 38px !important; 
+        font-size: 40px !important; 
         font-weight: 700 !important;
     }
 
