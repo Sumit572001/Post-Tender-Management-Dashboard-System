@@ -2,22 +2,103 @@ import streamlit as st
 import pandas as pd
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="Post Tender Dashboard", layout="wide")
+st.set_page_config(page_title="Nyati Post Tender Dashboard", layout="wide")
 
-# --- 2. CUSTOM CSS (Isse styling aur animation aayegi) ---
+# --- CUSTOM CSS (Table Styling, Fonts & Background Blur) ---
 st.markdown("""
     <style>
-    .stApp { background-color: #FFFFFF; }
-    thead tr th { background-color: #002366 !important; color: white !important; font-weight: bold !important; }
-    tbody tr:hover { background-color: #e6f0ff !important; transition: 0.3s; }
-    .metric-card { 
-        background-color: #f8f9fa; border-radius: 10px; padding: 15px; 
-        border-left: 5px solid #002366; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); 
+    /* 1. BACKGROUND BLUR (Building Image) */
+    .stApp {
+        background-image: url("https://nyatigroup.com/wp-content/uploads/2021/08/Nyati-Unitree-Entrance-Night-1-scaled.jpg"); 
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .main-container { animation: fadeIn 1s; }
+    .stApp::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(255, 255, 255, 0.5); 
+        backdrop-filter: blur(12px); 
+        z-index: -1;
+    }
+
+    /* 2. TABLE FONT & HIGHLIGHTING (Red/Blue Circle Fix) */
+    /* st.table use karne par ye font 100% kaam karega */
+    
+    /* Table Headers (Red Circle) */
+    [data-testid="stTable"] thead tr th {
+        background-color: #002366 !important;
+        color: white !important;
+        font-size: 28px !important; /* Bada font size headings ke liye */
+        font-weight: 800 !important;
+        text-align: center !important;
+        padding: 20px !important;
+    }
+
+    /* Table Data/Rows (Blue Circle) */
+    [data-testid="stTable"] tbody td {
+        font-size: 24px !important; /* Bada font size Excel data ke liye */
+        font-weight: 600 !important;
+        color: #000000 !important;
+        padding: 15px !important;
+        background-color: rgba(255, 255, 255, 0.7) !important; /* Halka white background readability ke liye */
+    }
+
+    /* 3. LANDING PAGE TITLES */
+    .main-title { 
+        color: #002366; 
+        font-size: 80px !important; 
+        font-weight: 650; 
+        text-align: center;
+        width: 100%;
+        margin-top: 60px;
+    }
+
+    .sub-title { 
+        color: #444444; 
+        font-size: 60px !important; 
+        font-weight: bold; 
+        text-align: center;
+        width: 100%;
+        margin-bottom: 80px;
+    }
+
+    /* 4. BUTTONS & BOXES */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        justify-content: center !important; 
+        align-items: center !important;
+        gap: 60px !important; 
+        width: 100% !important;
+    }
+
+    div.stButton > button {
+        width: 480px !important; 
+        height: 250px !important; 
+        border-radius: 35px !important;
+        border: 6px solid #002366 !important; 
+        background-color: #f0f2f6 !important;
+        color: #002366 !important;
+        transition: 0.4s;
+    }
+
+    div.stButton > button p {
+        font-size: 38px !important; 
+        font-weight: 700 !important;
+    }
+
+    div.stButton > button:hover {
+        background-color: #002366 !important;
+        color: white !important;
+        transform: scale(1.08);
+    }
     </style>
     """, unsafe_allow_html=True)
+
+# --- SESSION STATE ---
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'landing'
 
 # --- 1. PROJECT DATA (SAAF BLOCKS FORMAT) ---
 projects = [
@@ -320,121 +401,162 @@ projects = [
     }
 ]
 
-# --- DASHBOARD UI ---
-st.title("🏗️ Post Tender Management Dashboard")
-st.markdown("---")
+# Landing Page Logic
 
-# DataFrame index setup
-df_home = pd.DataFrame(projects)
-df_home.index = range(1, len(df_home) + 1)
+if st.session_state.current_page == 'landing':
+    st.markdown('<div class="main-title">Nyati Engineering & Consultant Pvt. Ltd</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">(EPC)</div>', unsafe_allow_html=True)
 
-# --- NEW: PROJECT SELECTION ---
-st.subheader("🔍 Select Project to View Details")
+    # 5 columns banaye hain: side wale khali rahenge [1.5, 3, 0.5, 3, 1.5]
+    # Isse beech ke do columns (col2 aur col4) bilkul center mein aayenge
+    empty1, col1, gap, col2, empty2 = st.columns([1.5, 4, 0.5, 4, 1.5])
+    with col1:
+        if st.button("🏗️\nProject\nSummary"):
+            st.session_state.current_page = 'dashboard'
+            st.rerun()
 
-# Aapne kaha tha ki "Detailed data dekhne ke liye project chunein:" wali line nahi chahiye, 
-# isliye label ko khali ("") kar diya hai.
-selected_project = st.selectbox(
-    label="", 
-    options=["-- Select a Project --"] + df_home["Project Name"].tolist(),
-    label_visibility="collapsed"  # Isse label ki jagah bhi nahi gheraga
-)
+    with col2:
+        if st.button("📐\nBuild Up\nArea"):
+         st.session_state.current_page = 'area'
+         st.rerun()
 
-st.markdown("---")
-st.subheader("📌 Master Project List")
+# --- PAGE 2: PROJECT SUMMARY (DASHBOARD VIEW) ---
+elif st.session_state.current_page == 'dashboard':
+    if st.button("⬅️ Back to Main Menu"):
+        st.session_state.current_page = 'landing'
+        st.rerun()
 
-# Columns jo dikhane hain
-display_columns = [
-    "Project Name", "Type of Contractor", "Area", 
-    "Original BOQ Amount", "Original Budget", 
-    "Total Revised Budget", "Client Bill Amount", "Consumed Amount"
-]
-
-# --- STATUS TEXT COLOURING ---
-def format_contractor(val):
-    if val == "Lumpsum": color = "#FFB433"
-    elif val == "Item rate": color = "#48A111"
-    else: color = "#1C4D8D"
-    return f'color: {color}; font-weight: bold; background-color: white;'
-
-# --- TABLE DISPLAY ---
-styled_df = df_home[display_columns].style.map(format_contractor, subset=["Type of Contractor"]) \
-            .format({
-                "Original BOQ Amount": "₹{:,.0f}", 
-                "Original Budget": "₹{:,.0f}", 
-                "Total Revised Budget": "₹{:,.0f}",
-                "Client Bill Amount": "₹{:,.0f}",
-                "Consumed Amount": "₹{:,.0f}"
-            })
-
-st.dataframe(
-    styled_df, 
-    use_container_width=True, 
-    height=(len(df_home) + 1) * 35 + 40
-)
-
-# --- 3. UNIVERSAL DYNAMIC SHEET INTEGRATION ---
-if selected_project != "-- Select a Project --":
+    st.title("🏗️ Post-Tender Department Management Dashboard")
     st.markdown("---")
-    st.subheader(f"📊 Detailed View: {selected_project}")
+
+    df_home = pd.DataFrame(projects)
     
-    row = df_home[df_home["Project Name"] == selected_project].iloc[0]
-    raw_url = row.get("Sheet_Link")
+    st.subheader("🔍 Select Project")
+    selected_project = st.selectbox(
+        label="", 
+        options=["-- Select a Project --"] + df_home["Project Name"].tolist(),
+        label_visibility="collapsed"
+    )
+
+    st.markdown("---")
+    st.subheader("Master Summary")
+
+    # --- YAHAN FIX KIYA HAI: AB POORE 9 COLUMNS DIKHENGE ---
+    # Index + 8 Data Columns = Total 9 Columns
+    display_columns = [
+        "Project Name", 
+        "Type of Contractor", 
+        "Area", 
+        "Original BOQ Amount", 
+        "Original Budget", 
+        "Total Revised Budget", 
+        "Client Bill Amount", 
+        "Consumed Amount"
+    ]
     
-    if raw_url and "docs.google.com" in raw_url:
-        try:
-            csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
-            
-            # Step 1: Pehle 20 rows read karo headers dhoondne ke liye
-            temp_df = pd.read_csv(csv_url, header=None, nrows=20)
-            
-            header_row = 0
-            for i, r in temp_df.iterrows():
-                # Agar row mein 'Sr.' aur 'Particular' ya 'Description' dikhe toh wo header hai
-                row_values = [str(x).lower() for x in r.values]
-                if any("sr." in s for s in row_values) and any("particular" in s or "description" in s for s in row_values):
-                    header_row = i
-                    break
-            
-            # Step 2: Sahi header row se data load karo
-            df_detail = pd.read_csv(csv_url, skiprows=header_row)
-            
-            # Clean column names (Remove newlines and extra spaces)
-            df_detail.columns = [str(c).replace('\n', ' ').strip() for c in df_detail.columns]
+    # Data copy karke formatting apply kar rahe hain
+    df_display = df_home[display_columns].copy()
+    
+    # Paiso waale columns ko format karne ke liye list
+    money_cols = ["Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
+    
+    for col in money_cols:
+        df_display[col] = df_display[col].apply(lambda x: f"₹{x:,.0f}" if isinstance(x, (int, float)) else x)
 
-            # Step 3: Flexible Column Finder (Har sheet ke liye)
-            def find_col(possible_names):
-                for col in df_detail.columns:
-                    if any(name.lower() in col.lower() for name in possible_names):
-                        return col
-                return None
+    # Table display (Isme Index column automatically add ho jata hai, total 9 dikhenge)
+    st.table(df_display)
 
-            mapping = {
-                "Sr.No": find_col(["Sr. No", "Sr.No", "Sl.No"]),
-                "Description": find_col(["Particular", "Description", "Items"]),
-                "Original Budget": find_col(["Original Budget", "Orignal Budget", "ESTIMATION ZERO COST"]),
-                "Revised Budget": find_col(["Total Revised Budget", "TENDER ZERO COST"]),
-                "BOQ Amount": find_col(["Original BOQ Amount", "ZERO AMOUNT"]),
-                "Client Bill": find_col(["Client Bill", "Cummulative Client"]),
-                "Consumed Amount": find_col(["Consumed Amount", "Consumed Budget"])
-            }
+    # --- TABS LOGIC (As it is) ---
+    if selected_project != "-- Select a Project --":
+        st.markdown("---")
+        tab1, tab2 = st.tabs(["🏗️ Project Summary", "📐 Built-up Area"])
 
-            selected_cols = [v for k, v in mapping.items() if v is not None]
+        with tab1:
+            project_data = df_home[df_home["Project Name"] == selected_project].iloc[0]
+            raw_url = project_data.get("Sheet_Link")
+            st.subheader(f"📊 Detailed View: {selected_project}")
 
-            if len(selected_cols) > 2:
-                final_df = df_detail[selected_cols].copy()
-                
-                # Styling
-                def row_style(row):
-                    desc_col = mapping["Description"]
-                    if desc_col and "TOTAL" in str(row[desc_col]).upper():
-                        return ['background-color: #28a745; color: white; font-weight: bold;'] * len(row)
-                    return [''] * len(row)
-
-                st.dataframe(final_df.style.apply(row_style, axis=1), use_container_width=True, hide_index=True)
-                st.success(f"✅ Auto-detected format and loaded data for {selected_project}")
+            if raw_url and "docs.google.com" in str(raw_url):
+                try:
+                    csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
+                    df_detail = pd.read_csv(csv_url, skiprows=5)
+                    
+                    # --- UPDATE 2: Detail Table Height (Scroll hat gaya) ---
+                    st.dataframe(
+                        df_detail, 
+                        use_container_width=True, 
+                        height=(len(df_detail) + 1) * 35 + 40
+                    )
+                except:
+                    st.error("Sheet data load karne mein dikkat ho rahi hai.")
             else:
-                st.warning("⚠️ Column names detect nahi ho pa rahe hain. Sheet ka header check karein.")
-                st.write("Ditected Columns:", df_detail.columns.tolist())
+                st.info("Is project ke liye link available nahi hai.")
+
+# --- PAGE 3: BUILT UP AREA (CLEAN VERSION) ---
+elif st.session_state.current_page == 'area':
+    if st.button("⬅️ Back to Main Menu"):
+        st.session_state.current_page = 'landing'
+        st.rerun()
+
+    st.markdown('<div class="main-title">📐 Built-up Area Summary</div>', unsafe_allow_html=True)
+    st.markdown("---")
+
+    # Aapke Updated Google Sheet Links
+    project_links = {
+        "ATS BYCULLA": "https://docs.google.com/spreadsheets/d/1bN7RayW-rBo2Km6t1ImRoDZUQJvMhLjUDNI4ma6WNb4/edit?usp=sharing",
+        "POLICE HOUSING": "https://docs.google.com/spreadsheets/d/14hg7Qc0xKqrhM6zn2my9FX-8Jdd-6hXmDpDQvuCFKyU/edit?usp=sharing",
+        "GERA KHARADI": "https://docs.google.com/spreadsheets/d/1Da7xRWPD3EsKlUWmKnweeWGwsXqeEXdgTOXI6DnW5vM/edit?usp=sharing",
+        "NAGPUR HOSTEL": "https://docs.google.com/spreadsheets/d/13mAbS-9Kq8kqMBzHp90qRn_UEgiXryeyR_72x-jiM9k/edit?usp=sharing",
+        "ADMIN RATNAGIRI": "https://docs.google.com/spreadsheets/d/1XUZh68qgDmtHGh6k_ye2rs3KgaMTXADJUmRT33tgNxY/edit?usp=sharing",
+        "SHIRDI COMPLEX": "https://docs.google.com/spreadsheets/d/1lC64zuM-S_wgmF9TAYGzD7Z6M5CgXhcN5RDs_0-JkMw/edit?usp=sharing",
+        "CHANDRAPUR": "https://docs.google.com/spreadsheets/d/1S2t8j1g7gOVtnxZEn6S32wcOdTbCMkpJ5lU-DH1fxvg/edit?usp=sharing",
+        "GERA IMPERIUM": "https://docs.google.com/spreadsheets/d/1d3UrxXAxfOlpShswUiggDWiyGUzwLS1JhkA5Xbk9NYw/edit?usp=sharing",
+        "HINJEWADI": "https://docs.google.com/spreadsheets/d/1pKoLaRcDO2J8d0gKWtOK3SnCqmno_zIDpp9sijwzang/edit?usp=sharing",
+        "JALGAON": "https://docs.google.com/spreadsheets/d/1klERjX1ZorvnwkulmsypdxEkFJxrD3iF6RB4kN-OGt0/edit?usp=sharing",
+        "BHOJPUR": "https://docs.google.com/spreadsheets/d/1MKTFpUMxVlHAadPRkvCb5jOP1EBrMGwoxtFoJYMHPhU/edit?usp=sharing",
+        "KALMBOLI": "https://docs.google.com/spreadsheets/d/16sX-cwe2H5jpUmHWd2ig1M1xKF2hHvnaIFKJZO5HQW8/edit?usp=sharing",
+        "POLICE HOUSING KANDIWALI": "https://docs.google.com/spreadsheets/d/1I4oLusSWDtjMwo0i6Bf1gM9oIzDuZVxMM4Nl0AcsvDU/edit?usp=sharing",
+    }
+
+    selected_project_name = st.selectbox("📁 Select Project", list(project_links.keys()))
+    sheet_url = project_links[selected_project_name]
+
+    if sheet_url:
+        try:
+            # 1. URL to CSV conversion
+            base_url = sheet_url.split('/edit')[0]
+            csv_export_url = f"{base_url}/export?format=csv"
+
+            # 2. Load data
+            df = pd.read_csv(csv_export_url)
+
+            # 3. Column Cleaning Logic
+            # Hum saare column names ko clean (strip) kar rahe hain
+            df.columns = [str(c).strip() for c in df.columns]
+
+            # 4. Filter: Sirf aapke bataye hue 3 columns select karein
+            # Hum 'fuzzy' search kar rahe hain taaki agar 'Sr.no' ya 'Sr. No.' ho toh bhi pakad le
+            target_cols = []
+            for col in df.columns:
+                c_low = col.lower()
+                if 'sr' in c_low or 'description' in c_low or 'area' in c_low:
+                    target_cols.append(col)
+            
+            # Sirf selected columns rakhein aur khali rows (NaN) hatayein
+            df_final = df[target_cols].dropna(subset=[target_cols[1]]) # Description khali nahi honi chahiye
+
+            # 5. Display
+            st.success(f"✅ {selected_project_name} Summary Loaded")
+            
+            # Styling: Table ko sundar dikhane ke liye
+            st.dataframe(
+                df_final, 
+                use_container_width=True, 
+                hide_index=True
+            )
 
         except Exception as e:
-            st.error(f"❌ Sheet Load Error: {e}")
+            st.error(f"⚠️ Error: {e}")
+            st.info("Check karein ki Sheet 'Anyone with the link' par shared hai.")
+    else:
+        st.warning("Is project ka link abhi add nahi kiya gaya hai.")
