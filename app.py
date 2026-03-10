@@ -467,31 +467,57 @@ elif st.session_state.current_page == 'dashboard':
     # Table display (Isme Index column automatically add ho jata hai, total 9 dikhenge)
     st.table(df_display)
 
-    # --- TABS LOGIC (As it is) ---
+    # --- PROJECT SUMMARY SECTION (TABS REMOVED) ---
     if selected_project != "-- Select a Project --":
         st.markdown("---")
-        tab1, tab2 = st.tabs(["🏗️ Project Summary", "📐 Built-up Area"])
+        
+        # Ab hum Tabs nahi use kar rahe, seedha data load karenge
+        project_data = df_home[df_home["Project Name"] == selected_project].iloc[0]
+        raw_url = project_data.get("Sheet_Link")
+        st.subheader(f"📊 Detailed View: {selected_project}")
 
-        with tab1:
-            project_data = df_home[df_home["Project Name"] == selected_project].iloc[0]
-            raw_url = project_data.get("Sheet_Link")
-            st.subheader(f"📊 Detailed View: {selected_project}")
-
-            if raw_url and "docs.google.com" in str(raw_url):
-                try:
-                    csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
-                    df_detail = pd.read_csv(csv_url, skiprows=5)
+        if raw_url and "docs.google.com" in str(raw_url):
+            try:
+                csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
+                # Skiprows aapki sheet ke hisaab se (5 as per previous logic)
+                df_detail = pd.read_csv(csv_url, skiprows=5)
+                
+                # 1. Clean Column Names
+                df_detail.columns = [str(c).strip() for c in df_detail.columns]
+                
+                # 2. Target Columns Jo Aapko Chahiye
+                target_list = [
+                    "Item Description", "Original BOQ Amount", 
+                    "Original Budget", "Total Revised Budget", 
+                    "Client Bill Amount", "Consumed Amount"
+                ]
+                
+                # 3. Smart Matching Logic
+                final_columns = []
+                for target in target_list:
+                    for actual in df_detail.columns:
+                        if target.lower() in actual.lower() or actual.lower() in target.lower():
+                            final_columns.append(actual)
+                            break
+                
+                # 4. Filter and Display
+                if final_columns:
+                    df_final_view = df_detail[final_columns].dropna(subset=[final_columns[0]])
                     
-                    # --- UPDATE 2: Detail Table Height (Scroll hat gaya) ---
                     st.dataframe(
-                        df_detail, 
+                        df_final_view, 
                         use_container_width=True, 
-                        height=(len(df_detail) + 1) * 35 + 40
+                        height=(len(df_final_view) + 1) * 35 + 45,
+                        hide_index=True
                     )
-                except:
-                    st.error("Sheet data load karne mein dikkat ho rahi hai.")
-            else:
-                st.info("Is project ke liye link available nahi hai.")
+                else:
+                    st.warning("Sheet mein maange gaye columns nahi mile.")
+                    st.write("Sheet Columns found:", list(df_detail.columns))
+
+            except Exception as e:
+                st.error(f"Error loading details: {e}")
+        else:
+            st.info("Is project ke liye link available nahi hai.")
 
 # --- PAGE 3: BUILT UP AREA (STRICT FIX) ---
 elif st.session_state.current_page == 'area':
