@@ -69,13 +69,13 @@ st.markdown("""
         display: flex !important;
         justify-content: center !important; 
         align-items: center !important;
-        gap: 60px !important; 
+        gap: 50px !important; 
         width: 100% !important;
     }
 
     div.stButton > button {
-        width: 580px !important; 
-        height: 280px !important; 
+        width: 450px !important; 
+        height: 180px !important; 
         border-radius: 35px !important;
         border: 6px solid #002366 !important; 
         background-color: #f0f2f6 !important;
@@ -84,9 +84,10 @@ st.markdown("""
     }
 
     div.stButton > button p {
-        font-size: 48px !important; 
-        font-weight: 700 !important;
+        font-size: 40px !important; 
+        font-weight: 650 !important;
     }
+
 
     div.stButton > button:hover {
         background-color: #002366 !important;
@@ -492,71 +493,138 @@ elif st.session_state.current_page == 'dashboard':
             else:
                 st.info("Is project ke liye link available nahi hai.")
 
-# --- PAGE 3: BUILT UP AREA (CLEAN VERSION) ---
+# --- PAGE 3: BUILT UP AREA (STRICT FIX) ---
 elif st.session_state.current_page == 'area':
     if st.button("⬅️ Back to Main Menu"):
         st.session_state.current_page = 'landing'
         st.rerun()
 
+    # CSS for Styling (Heading Blue, Font Bold, No double Sr.no)
+    st.markdown("""
+        <style>
+            thead tr th {
+                background-color: #002060 !important;
+                color: white !important;
+                font-size: 16px !important; /* Pehle 20px tha, ab 16px kar diya */
+                font-weight: bold !important;
+                text-align: center !important;
+            }
+            tbody tr td {
+                font-size: 14px !important; /* Pehle 18px tha, ab 14px kar diya */
+            }
+            .styled-table {
+                width: 100%;
+                border-collapse: collapse;
+                /* font-size: 18px;  <-- Is line ko hata dein ya comment kar dein */
+                font-family: Arial, sans-serif;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.markdown('<div class="main-title">📐 Built-up Area Summary</div>', unsafe_allow_html=True)
     st.markdown("---")
 
-    # Aapke Updated Google Sheet Links
-    project_links = {
-        "ATS BYCULLA": "https://docs.google.com/spreadsheets/d/1bN7RayW-rBo2Km6t1ImRoDZUQJvMhLjUDNI4ma6WNb4/edit?usp=sharing",
-        "POLICE HOUSING": "https://docs.google.com/spreadsheets/d/14hg7Qc0xKqrhM6zn2my9FX-8Jdd-6hXmDpDQvuCFKyU/edit?usp=sharing",
-        "GERA KHARADI": "https://docs.google.com/spreadsheets/d/1Da7xRWPD3EsKlUWmKnweeWGwsXqeEXdgTOXI6DnW5vM/edit?usp=sharing",
-        "NAGPUR HOSTEL": "https://docs.google.com/spreadsheets/d/13mAbS-9Kq8kqMBzHp90qRn_UEgiXryeyR_72x-jiM9k/edit?usp=sharing",
-        "ADMIN RATNAGIRI": "https://docs.google.com/spreadsheets/d/1XUZh68qgDmtHGh6k_ye2rs3KgaMTXADJUmRT33tgNxY/edit?usp=sharing",
-        "SHIRDI COMPLEX": "https://docs.google.com/spreadsheets/d/1lC64zuM-S_wgmF9TAYGzD7Z6M5CgXhcN5RDs_0-JkMw/edit?usp=sharing",
-        "CHANDRAPUR": "https://docs.google.com/spreadsheets/d/1S2t8j1g7gOVtnxZEn6S32wcOdTbCMkpJ5lU-DH1fxvg/edit?usp=sharing",
-        "GERA IMPERIUM": "https://docs.google.com/spreadsheets/d/1d3UrxXAxfOlpShswUiggDWiyGUzwLS1JhkA5Xbk9NYw/edit?usp=sharing",
-        "HINJEWADI": "https://docs.google.com/spreadsheets/d/1pKoLaRcDO2J8d0gKWtOK3SnCqmno_zIDpp9sijwzang/edit?usp=sharing",
-        "JALGAON": "https://docs.google.com/spreadsheets/d/1klERjX1ZorvnwkulmsypdxEkFJxrD3iF6RB4kN-OGt0/edit?usp=sharing",
-        "BHOJPUR": "https://docs.google.com/spreadsheets/d/1MKTFpUMxVlHAadPRkvCb5jOP1EBrMGwoxtFoJYMHPhU/edit?usp=sharing",
-        "KALMBOLI": "https://docs.google.com/spreadsheets/d/16sX-cwe2H5jpUmHWd2ig1M1xKF2hHvnaIFKJZO5HQW8/edit?usp=sharing",
-        "POLICE HOUSING KANDIWALI": "https://docs.google.com/spreadsheets/d/1I4oLusSWDtjMwo0i6Bf1gM9oIzDuZVxMM4Nl0AcsvDU/edit?usp=sharing",
-    }
+    # 1. SARE PROJECTS KE BLOCKS
+    projects_list = [
+        {
+        "Sr.no": 1, "Project Name": "ADMIN BUILDING, RATNAGIRI", 
+         "Area sq.m": 21735.04, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1XUZh68qgDmtHGh6k_ye2rs3KgaMTXADJUmRT33tgNxY/edit?usp=sharing"
+         },
+        {
+         "Sr.no": 2, "Project Name": "ATS BYCULLA", 
+         "Area sq.m": 23442.32, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1bN7RayW-rBo2Km6t1ImRoDZUQJvMhLjUDNI4ma6WNb4/edit?usp=sharing"
+         },
+        {
+         "Sr.no": 3, "Project Name": "SHIRDI COMPLEX", 
+         "Area sq.m": 745387, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1lC64zuM-S_wgmF9TAYGzD7Z6M5CgXhcN5RDs_0-JkMw/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 4, "Project Name": "POLICE HOUSING KANDIVALI", 
+         "Area sq.m":  65935.19, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1I4oLusSWDtjMwo0i6Bf1gM9oIzDuZVxMM4Nl0AcsvDU/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 5, "Project Name": "NAGPUR HOSTEL", 
+         "Area sq.m":  33150, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/13mAbS-9Kq8kqMBzHp90qRn_UEgiXryeyR_72x-jiM9k/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 6, "Project Name": "GERA KHARADI", 
+         "Area sq.m": 117339.03, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1Da7xRWPD3EsKlUWmKnweeWGwsXqeEXdgTOXI6DnW5vM/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 7, "Project Name": "CHANDRAPUR", 
+         "Area sq.m": 69480.64, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1S2t8j1g7gOVtnxZEn6S32wcOdTbCMkpJ5lU-DH1fxvg/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 8, "Project Name": "GERA IMPERIUM", 
+         "Area sq.m":  1351556.04, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1d3UrxXAxfOlpShswUiggDWiyGUzwLS1JhkA5Xbk9NYw/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 9, "Project Name": "HINJEWADI", 
+         "Area sq.m":  27236.30, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1pKoLaRcDO2J8d0gKWtOK3SnCqmno_zIDpp9sijwzang/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 10, "Project Name": "MEDICAL COLLEGE JALGAON", 
+         "Area sq.m": 104592.23, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1klERjX1ZorvnwkulmsypdxEkFJxrD3iF6RB4kN-OGt0/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 11, "Project Name": "MEDICAL COLLEGE BHOJPUR", 
+         "Area sq.m":  109075, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/1MKTFpUMxVlHAadPRkvCb5jOP1EBrMGwoxtFoJYMHPhU/edit?usp=sharing"
+        },
+        {
+         "Sr.no": 12, "Project Name": "INCUBATION CENTER KALAMBOLI", 
+         "Area sq.m":  71616.06, 
+         "Sheet_Link": "https://docs.google.com/spreadsheets/d/16sX-cwe2H5jpUmHWd2ig1M1xKF2hHvnaIFKJZO5HQW8/edit?usp=sharing"
+        }
+    ]
 
-    selected_project_name = st.selectbox("📁 Select Project", list(project_links.keys()))
-    sheet_url = project_links[selected_project_name]
+    # --- DROPDOWN ---
+    st.subheader("🔍 View Detailed Project Breakup")
+    project_options = ["-- Choose Project --"] + [p["Project Name"] for p in projects_list]
+    selected_p = st.selectbox("Select a project:", project_options)
 
-    if sheet_url:
+    if selected_p != "-- Choose Project --":
+        selected_link = next(p["Sheet_Link"] for p in projects_list if p["Project Name"] == selected_p)
         try:
-            # 1. URL to CSV conversion
-            base_url = sheet_url.split('/edit')[0]
-            csv_export_url = f"{base_url}/export?format=csv"
-
-            # 2. Load data
-            df = pd.read_csv(csv_export_url)
-
-            # 3. Column Cleaning Logic
-            # Hum saare column names ko clean (strip) kar rahe hain
-            df.columns = [str(c).strip() for c in df.columns]
-
-            # 4. Filter: Sirf aapke bataye hue 3 columns select karein
-            # Hum 'fuzzy' search kar rahe hain taaki agar 'Sr.no' ya 'Sr. No.' ho toh bhi pakad le
-            target_cols = []
-            for col in df.columns:
-                c_low = col.lower()
-                if 'sr' in c_low or 'description' in c_low or 'area' in c_low:
-                    target_cols.append(col)
+            base_url = selected_link.split('/edit')[0]
+            df_detail = pd.read_csv(f"{base_url}/export?format=csv")
             
-            # Sirf selected columns rakhein aur khali rows (NaN) hatayein
-            df_final = df[target_cols].dropna(subset=[target_cols[1]]) # Description khali nahi honi chahiye
-
-            # 5. Display
-            st.success(f"✅ {selected_project_name} Summary Loaded")
+            # Column cleaning
+            df_detail.columns = [str(c).strip() for c in df_detail.columns]
+            cols = [c for c in df_detail.columns if any(x in c.lower() for x in ['sr', 'desc', 'area'])]
+            df_detail_final = df_detail[cols].dropna(subset=[cols[1]]).copy()
             
-            # Styling: Table ko sundar dikhane ke liye
-            st.dataframe(
-                df_final, 
-                use_container_width=True, 
-                hide_index=True
-            )
+            # --- DETAIL TABLE SE .0 HATANE KA FIX ---
+            sr_col = cols[0] # Pehla column Sr.no hota hai
+            # Saare non-numbers ko 0 karke integer mein convert karna
+            df_detail_final[sr_col] = pd.to_numeric(df_detail_final[sr_col], errors='coerce').fillna(0).astype(int)
+            # 0 ko khali dikhane ke liye (Optional: agar Excel mein "Total" wali row mein Sr.no nahi hai)
+            df_detail_final[sr_col] = df_detail_final[sr_col].replace(0, "")
 
+            st.markdown(f"#### 📑 {selected_p} Details")
+            st.markdown(df_detail_final.to_html(index=False, classes='styled-table'), unsafe_allow_html=True)
+            
         except Exception as e:
-            st.error(f"⚠️ Error: {e}")
-            st.info("Check karein ki Sheet 'Anyone with the link' par shared hai.")
-    else:
-        st.warning("Is project ka link abhi add nahi kiya gaya hai.")
+            st.error(f"Error: {e}")
+
+    st.markdown("---")
+
+    # --- BOTTOM SUMMARY TABLE ---
+    st.subheader("📊 Overall Project Summary")
+    df_summary = pd.DataFrame(projects_list)[["Sr.no", "Project Name", "Area sq.m"]]
+    
+    # --- SUMMARY TABLE SE .0 HATANE KA FIX ---
+    df_summary["Sr.no"] = df_summary["Sr.no"].astype(int)
+    
+    # HTML display bina index ke
+    st.markdown(df_summary.to_html(index=False, classes='styled-table'), unsafe_allow_html=True)
