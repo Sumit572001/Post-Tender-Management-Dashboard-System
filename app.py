@@ -439,117 +439,79 @@ elif st.session_state.current_page == 'dashboard':
         label_visibility="collapsed"
     )
 
-    st.markdown("---")
-    st.subheader("Master Summary")
-
-    # --- YAHAN FIX KIYA HAI: AB POORE 9 COLUMNS DIKHENGE ---
-    # Index + 8 Data Columns = Total 9 Columns
-    display_columns = [
-        "Project Name", 
-        "Type of Contractor", 
-        "Area", 
-        "Original BOQ Amount", 
-        "Original Budget", 
-        "Total Revised Budget", 
-        "Client Bill Amount", 
-        "Consumed Amount"
-    ]
-    
-    # Data copy karke formatting apply kar rahe hain
+    # Master Table (Hamesha dikhega)
+    st.markdown("### Master Summary")
+    display_columns = ["Project Name", "Type of Contractor", "Area", "Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
     df_display = df_home[display_columns].copy()
-    
-    # Paiso waale columns ko format karne ke liye list
     money_cols = ["Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
-    
     for col in money_cols:
         df_display[col] = df_display[col].apply(lambda x: f"₹{x:,.0f}" if isinstance(x, (int, float)) else x)
-
-    # Table display (Isme Index column automatically add ho jata hai, total 9 dikhenge)
     st.table(df_display)
 
-    # --- PROJECT SUMMARY SECTION (TABS REMOVED) ---
+    # Detailed Project View (Jab select karein tab)
     if selected_project != "-- Select a Project --":
         st.markdown("---")
-        
-        # Ab hum Tabs nahi use kar rahe, seedha data load karenge
         project_data = df_home[df_home["Project Name"] == selected_project].iloc[0]
         raw_url = project_data.get("Sheet_Link")
-        st.subheader(f"📊 Detailed View: {selected_project}")
-
+        
         if raw_url and "docs.google.com" in str(raw_url):
             try:
                 csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
-                # Skiprows aapki sheet ke hisaab se (5 as per previous logic)
-                df_detail = pd.read_csv(csv_url, skiprows=5)
                 
-                # 1. Clean Column Names
-                df_detail.columns = [str(c).strip() for c in df_detail.columns]
+                # Logic 1: Find Header for Dashboard Sheets
+                df_raw = pd.read_csv(csv_url, header=None).head(20)
+                h_idx = 0
+                for i, row in df_raw.iterrows():
+                    row_str = " ".join(row.astype(str)).lower()
+                    if any(kw in row_str for kw in ["particular", "item description", "sr.no"]):
+                        h_idx = i
+                        break
                 
-                # 2. Target Columns Jo Aapko Chahiye
-                target_list = [
-                    "Item Description", "Original BOQ Amount", 
-                    "Original Budget", "Total Revised Budget", 
-                    "Client Bill Amount", "Consumed Amount"
-                ]
-                
-                # 3. Smart Matching Logic
-                final_columns = []
-                for target in target_list:
-                    for actual in df_detail.columns:
-                        if target.lower() in actual.lower() or actual.lower() in target.lower():
-                            final_columns.append(actual)
+                df_detail = pd.read_csv(csv_url, skiprows=h_idx)
+                df_detail.columns = [str(c).replace('\n', ' ').strip() for c in df_detail.columns]
+
+                # Dashboard specific columns matching
+                mapping = {
+                    "Item Description": ["particular", "item description", "items"],
+                    "Original Budget": ["original budget", "tender zero", "budget (with gst)"],
+                    "Revised Budget": ["revised budget", "revised target"],
+                    "Consumed Amount": ["consumed amount", "actual cost", "consumed budget"]
+                }
+
+                final_cols = []
+                for label, keywords in mapping.items():
+                    for col in df_detail.columns:
+                        if any(k in col.lower() for k in keywords):
+                            final_cols.append(col)
                             break
                 
-                # 4. Filter and Display
-                if final_columns:
-                    df_final_view = df_detail[final_columns].dropna(subset=[final_columns[0]])
+                if final_cols:
+                    df_final_view = df_detail[final_cols].dropna(subset=[final_cols[0]]).copy()
                     
-                    st.dataframe(
-                        df_final_view, 
-                        use_container_width=True, 
-                        height=(len(df_final_view) + 1) * 35 + 45,
-                        hide_index=True
-                    )
+                    def style_dash(row):
+                        val = str(row.iloc[0]).lower()
+                        if 'total' in val:
+                            return ['background-color: #90EE90; font-weight: bold; color: black'] * len(row)
+                        return [''] * len(row)
+
+                    st.markdown(f"#### 📊 Detailed View: {selected_project}")
+                    st.dataframe(df_final_view.style.apply(style_dash, axis=1), use_container_width=True, hide_index=True)
                 else:
-                    st.warning("Sheet mein maange gaye columns nahi mile.")
-                    st.write("Sheet Columns found:", list(df_detail.columns))
+                    st.warning("Matching columns (Budget/Particulars) nahi mile.")
 
             except Exception as e:
-                st.error(f"Error loading details: {e}")
-        else:
-            st.info("Is project ke liye link available nahi hai.")
+                st.error(f"Dashboard Error: {e}")
 
-# --- PAGE 3: BUILT UP AREA (STRICT FIX) ---
+# --- PAGE 3: BUILT UP AREA ---
 elif st.session_state.current_page == 'area':
     if st.button("⬅️ Back to Main Menu"):
         st.session_state.current_page = 'landing'
         st.rerun()
 
-    # CSS for Styling (Heading Blue, Font Bold, No double Sr.no)
-    st.markdown("""
-        <style>
-            thead tr th {
-                background-color: #002060 !important;
-                color: white !important;
-                font-size: 16px !important; /* Pehle 20px tha, ab 16px kar diya */
-                font-weight: bold !important;
-                text-align: center !important;
-            }
-            tbody tr td {
-                font-size: 14px !important; /* Pehle 18px tha, ab 14px kar diya */
-            }
-            .styled-table {
-                width: 100%;
-                border-collapse: collapse;
-                /* font-size: 18px;  <-- Is line ko hata dein ya comment kar dein */
-                font-family: Arial, sans-serif;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
     st.markdown('<div class="main-title">📐 Built-up Area Summary</div>', unsafe_allow_html=True)
-    st.markdown("---")
-
+    
+    # CSS for Area Table
+    st.markdown("<style>.area-table { width: 100%; border-collapse: collapse; } .area-table th { background-color: #002060 !important; color: white; }</style>", unsafe_allow_html=True)
     # 1. SARE PROJECTS KE BLOCKS
     projects_list = [
         {
@@ -614,43 +576,44 @@ elif st.session_state.current_page == 'area':
         }
     ]
 
-    # --- DROPDOWN ---
-    st.subheader("🔍 View Detailed Project Breakup")
-    project_options = ["-- Choose Project --"] + [p["Project Name"] for p in projects_list]
-    selected_p = st.selectbox("Select a project:", project_options)
-
-    if selected_p != "-- Choose Project --":
-        selected_link = next(p["Sheet_Link"] for p in projects_list if p["Project Name"] == selected_p)
-        try:
-            base_url = selected_link.split('/edit')[0]
-            df_detail = pd.read_csv(f"{base_url}/export?format=csv")
-            
-            # Column cleaning
-            df_detail.columns = [str(c).strip() for c in df_detail.columns]
-            cols = [c for c in df_detail.columns if any(x in c.lower() for x in ['sr', 'desc', 'area'])]
-            df_detail_final = df_detail[cols].dropna(subset=[cols[1]]).copy()
-            
-            # --- DETAIL TABLE SE .0 HATANE KA FIX ---
-            sr_col = cols[0] # Pehla column Sr.no hota hai
-            # Saare non-numbers ko 0 karke integer mein convert karna
-            df_detail_final[sr_col] = pd.to_numeric(df_detail_final[sr_col], errors='coerce').fillna(0).astype(int)
-            # 0 ko khali dikhane ke liye (Optional: agar Excel mein "Total" wali row mein Sr.no nahi hai)
-            df_detail_final[sr_col] = df_detail_final[sr_col].replace(0, "")
-
-            st.markdown(f"#### 📑 {selected_p} Details")
-            st.markdown(df_detail_final.to_html(index=False, classes='styled-table'), unsafe_allow_html=True)
-            
-        except Exception as e:
-            st.error(f"Error: {e}")
-
+    st.subheader("📊 Master Summary")
+    df_area_sum = pd.DataFrame(projects_list)[["Sr.no", "Project Name", "Area sq.m"]]
+    st.markdown(df_area_sum.to_html(index=False, classes='area-table'), unsafe_allow_html=True)
+    
     st.markdown("---")
 
-    # --- BOTTOM SUMMARY TABLE ---
-    st.subheader("📊 Overall Project Summary")
-    df_summary = pd.DataFrame(projects_list)[["Sr.no", "Project Name", "Area sq.m"]]
-    
-    # --- SUMMARY TABLE SE .0 HATANE KA FIX ---
-    df_summary["Sr.no"] = df_summary["Sr.no"].astype(int)
-    
-    # HTML display bina index ke
-    st.markdown(df_summary.to_html(index=False, classes='styled-table'), unsafe_allow_html=True)
+    # --- UPDATED SELECTION AREA (JUST LIKE DASHBOARD) ---
+    st.subheader("🔍 Select Project")
+    selected_p = st.selectbox(
+        label="", 
+        options=["-- Choose Project --"] + [p["Project Name"] for p in projects_list],
+        label_visibility="collapsed"
+    )
+
+    # Baki logic wahi hai jo kaam kar raha tha
+    if selected_p != "-- Choose Project --":
+        try:
+            link = next(p["Sheet_Link"] for p in projects_list if p["Project Name"] == selected_p)
+            url = link.split('/edit')[0] + "/export?format=csv"
+            
+            raw = pd.read_csv(url, header=None).head(20)
+            ai = 0
+            for i, r in raw.iterrows():
+                r_s = " ".join(r.astype(str)).lower()
+                if any(k in r_s for k in ["description", "particular", "area", "sq.m", "sqft"]):
+                    ai = i
+                    break
+            
+            df_a_detail = pd.read_csv(url, skiprows=ai)
+            df_a_detail.columns = [str(c).strip() for c in df_a_detail.columns]
+            
+            a_cols = [c for c in df_a_detail.columns if any(x in c.lower() for x in ['sr', 'desc', 'particular', 'area', 'sqm', 'sqft'])]
+            
+            if len(a_cols) >= 2:
+                df_f = df_a_detail[a_cols].dropna(subset=[a_cols[1]]).copy()
+                st.markdown(f"#### 📐 Detailed View: {selected_p}")
+                st.markdown(df_f.to_html(index=False, classes='area-table'), unsafe_allow_html=True)
+            else:
+                st.warning("Area details columns nahi mile.")
+        except Exception as e:
+            st.error(f"Area Error: {e}")
