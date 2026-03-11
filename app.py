@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="Nyati Post Tender Dashboard", layout="wide")
+st.set_page_config(page_title="Nyati Post-Tender Department Dashboard", layout="wide")
 
 # --- CUSTOM CSS (Table Styling, Fonts & Background Blur) ---
 st.markdown("""
