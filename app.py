@@ -405,7 +405,7 @@ projects = [
 # Landing Page Logic
 
 if st.session_state.current_page == 'landing':
-    st.markdown('<div class="main-title">Nyati Engineering & Consultant Pvt. Ltd</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">Nyati Engineers & Consultants Pvt. Ltd.</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">(EPC)</div>', unsafe_allow_html=True)
 
     # 5 columns banaye hain: side wale khali rahenge [1.5, 3, 0.5, 3, 1.5]
