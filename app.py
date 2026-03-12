@@ -64,35 +64,36 @@ st.markdown("""
         margin-bottom: 80px;
     }
 
-    /* 4. BUTTONS & BOXES */
+    /* 4. BUTTONS & BOXES - FIXED CENTER */
     [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        justify-content: center !important; 
-        align-items: center !important;
-        gap: 50px !important; 
-        width: 100% !important;
-    }
+    display: flex !important;
+    justify-content: center !important; 
+    align-items: center !important;
+    gap: 15px !important; /* Gap aur kam kar diya */
+    width: 80% !important; /* Container ki width limit ki taaki center ho sake */
+    margin: 0 auto !important; /* Ye sabse zaroori hai center karne ke liye */
+}
 
     div.stButton > button {
-        width: 450px !important; 
-        height: 180px !important; 
-        border-radius: 35px !important;
-        border: 6px solid #002366 !important; 
-        background-color: #f0f2f6 !important;
-        color: #002366 !important;
-        transition: 0.4s;
-    }
+    width: 200px !important; 
+    height: 60px !important; 
+    border-radius: 20px !important;
+    border: 3px solid #002366 !important; 
+    background-color: #f0f2f6 !important;
+    color: #002366 !important;
+    transition: 0.4s;
+}
 
     div.stButton > button p {
-        font-size: 40px !important; 
-        font-weight: 650 !important;
+        font-size: 20px !important; /* Font size 40px se 28px kiya */
+        font-weight: 400 !important;
+        line-height: 1.2 !important;
     }
-
 
     div.stButton > button:hover {
         background-color: #002366 !important;
         color: white !important;
-        transform: scale(1.08);
+        transform: scale(1.05);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -405,60 +406,75 @@ projects = [
 # Landing Page Logic
 
 if st.session_state.current_page == 'landing':
-    st.markdown('<div class="main-title">Nyati Engineers & Consultants Pvt. Ltd.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">(EPC)</div>', unsafe_allow_html=True)
+    # Isko Paste Karo:
+    st.markdown("""
+        <div style="
+            font-size: 36px; 
+            font-weight: bold; 
+            color: #002366; 
+            text-align: center; 
+            width: 100%; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            margin-top: 40px;
+        ">
+            Nyati Engineers & Consultants Pvt. Ltd.
+        </div>
+        <div style="
+            font-size: 28px; 
+            color: #444444; 
+            text-align: center; 
+            width: 100%; 
+            margin-bottom: 40px;
+        ">
+            (EPC)
+        </div>
+    """, unsafe_allow_html=True)
 
     # 5 columns banaye hain: side wale khali rahenge [1.5, 3, 0.5, 3, 1.5]
     # Isse beech ke do columns (col2 aur col4) bilkul center mein aayenge
-    empty1, col1, gap, col2, empty2 = st.columns([1.5, 4, 0.5, 4, 1.5])
+    # Gap kam karne ke liye ratio [1.5, 3.5, 0.1, 3.5, 1.5] kiya hai
+    # Side columns ko bada kiya (3.5 se 3.5) taaki beech ka content center rahe
+    empty1, col1, mid_gap, col2, empty2 = st.columns([3.5, 3, 0.1, 3, 3.5])
+    
     with col1:
-        if st.button("🏗️\nProject\nSummary"):
+        if st.button("🏗️ Project Summary"):
             st.session_state.current_page = 'dashboard'
             st.rerun()
 
     with col2:
-        if st.button("📐\nBuild Up\nArea"):
-         st.session_state.current_page = 'area'
-         st.rerun()
+        if st.button("📐 Build Up Area"):
+            st.session_state.current_page = 'area'
+            st.rerun()
 
 # --- PAGE 2: PROJECT SUMMARY (DASHBOARD VIEW) ---
 elif st.session_state.current_page == 'dashboard':
-    if st.button("⬅️ Back to Main Menu"):
-        st.session_state.current_page = 'landing'
-        st.rerun()
-
-    st.title("🏗️ Post-Tender Department Management Dashboard")
-    st.markdown("---")
-
-    df_home = pd.DataFrame(projects)
     
-    st.subheader("🔍 Select Project")
-    selected_project = st.selectbox(
-        label="", 
-        options=["-- Select a Project --"] + df_home["Project Name"].tolist(),
-        label_visibility="collapsed"
-    )
+    # Session State handle karne ke liye (Detail View logic)
+    if 'view_mode' not in st.session_state:
+        st.session_state.view_mode = 'table'
+    if 'selected_project' not in st.session_state:
+        st.session_state.selected_project = None
 
-    # Master Table (Hamesha dikhega)
-    st.markdown("### Master Summary")
-    display_columns = ["Project Name", "Type of Contractor", "Area", "Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
-    df_display = df_home[display_columns].copy()
-    money_cols = ["Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
-    for col in money_cols:
-        df_display[col] = df_display[col].apply(lambda x: f"₹{x:,.0f}" if isinstance(x, (int, float)) else x)
-    st.table(df_display)
+    # --- CASE A: AGAR DETAIL VIEW MEIN HAIN (EXCEL SHEET VIEW) ---
+    if st.session_state.view_mode == 'detail' and st.session_state.selected_project:
+        if st.button("⬅️ Back"):
+            st.session_state.view_mode = 'table'
+            st.session_state.selected_project = None
+            st.rerun()
 
-    # Detailed Project View (Jab select karein tab)
-    if selected_project != "-- Select a Project --":
+        st.title(f"📊 Detailed View: {st.session_state.selected_project}")
         st.markdown("---")
-        project_data = df_home[df_home["Project Name"] == selected_project].iloc[0]
+
+        # Aapka Original Excel Loading Logic
+        df_home = pd.DataFrame(projects)
+        project_data = df_home[df_home["Project Name"] == st.session_state.selected_project].iloc[0]
         raw_url = project_data.get("Sheet_Link")
         
         if raw_url and "docs.google.com" in str(raw_url):
             try:
                 csv_url = raw_url.split("/edit")[0] + "/export?format=csv"
-                
-                # Logic 1: Find Header for Dashboard Sheets
                 df_raw = pd.read_csv(csv_url, header=None).head(20)
                 h_idx = 0
                 for i, row in df_raw.iterrows():
@@ -470,11 +486,12 @@ elif st.session_state.current_page == 'dashboard':
                 df_detail = pd.read_csv(csv_url, skiprows=h_idx)
                 df_detail.columns = [str(c).replace('\n', ' ').strip() for c in df_detail.columns]
 
-                # Dashboard specific columns matching
                 mapping = {
                     "Item Description": ["particular", "item description", "items"],
+                    "Original BOQ Amount": ["original boq amount", "boq amount", "tender boq"],
                     "Original Budget": ["original budget", "tender zero", "budget (with gst)"],
                     "Revised Budget": ["revised budget", "revised target"],
+                    "Client Bill Amount": ["client bill amount", "client billing", "total billing"],
                     "Consumed Amount": ["consumed amount", "actual cost", "consumed budget"]
                 }
 
@@ -494,17 +511,78 @@ elif st.session_state.current_page == 'dashboard':
                             return ['background-color: #90EE90; font-weight: bold; color: black'] * len(row)
                         return [''] * len(row)
 
-                    st.markdown(f"#### 📊 Detailed View: {selected_project}")
                     st.dataframe(df_final_view.style.apply(style_dash, axis=1), use_container_width=True, hide_index=True)
                 else:
-                    st.warning("Matching columns (Budget/Particulars) nahi mile.")
-
+                    st.warning("Matching columns (Budget/BOQ) nahi mile.")
             except Exception as e:
                 st.error(f"Dashboard Error: {e}")
 
+    # --- CASE B: AGAR MASTER SUMMARY MEIN HAIN (TABLE VIEW) ---
+    else:
+        if st.button("⬅️ Back"):
+            st.session_state.current_page = 'landing'
+            st.rerun()
+
+        st.title("🏗️ Post-Tender Department Management Dashboard")
+        st.markdown("---")
+
+        df_home = pd.DataFrame(projects)
+        
+        # Master Summary Table
+        st.markdown("### Master Summary")
+        display_columns = ["Project Name", "Type of Contractor", "Area", "Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
+        df_display = df_home[display_columns].copy()
+        
+        money_cols = ["Original BOQ Amount", "Original Budget", "Total Revised Budget", "Client Bill Amount", "Consumed Amount"]
+        for col in money_cols:
+            df_display[col] = df_display[col].apply(lambda x: f"₹{x:,.0f}" if isinstance(x, (int, float)) else x)
+        
+        # --- NAYA STYLING LOGIC ADDED ---
+        styled_df = df_display.style.set_table_styles([
+            {
+                'selector': 'th',
+                'props': [
+                    ('background-color', '#1f4e78'),
+                    ('color', 'white'),
+                    ('font-size', '18px'),
+                    ('text-align', 'center'),
+                    ('font-weight', 'bold')
+                ]
+            },
+            {
+                'selector': 'td',
+                'props': [
+                    ('font-size', '16px'),
+                    ('padding', '10px')
+                ]
+            }
+        ])
+
+        # --- UPDATE: Height fix (Extra cells hatane ke liye) ---
+        # 35.2 per row height hoti hai, humne +38 header ke liye rakha hai
+        dynamic_height = (len(df_display) * 35.2) + 38
+
+        event = st.dataframe(
+            styled_df, 
+            use_container_width=True, 
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row", # Fixed: underscore ki jagah dash (-) lagaya
+            height=int(dynamic_height)   # Integer mein convert kiya for safety
+        )
+
+        # Row Selection Logic
+        if len(event.selection.rows) > 0:
+            selected_row_index = event.selection.rows[0]
+            project_to_open = df_display.iloc[selected_row_index]["Project Name"]
+            
+            st.session_state.selected_project = project_to_open
+            st.session_state.view_mode = 'detail'
+            st.rerun()
+
 # --- PAGE 3: BUILT UP AREA ---
 elif st.session_state.current_page == 'area':
-    if st.button("⬅️ Back to Main Menu"):
+    if st.button("⬅️ Back"):
         st.session_state.current_page = 'landing'
         st.rerun()
 
