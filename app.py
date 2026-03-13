@@ -523,8 +523,8 @@ elif st.session_state.current_page == 'dashboard':
             st.session_state.current_page = 'landing'
             st.rerun()
 
-        st.title("🏗️ Post-Tender Department Management Dashboard")
-        st.markdown("---")
+        st.markdown('<h1 style="font-size: 28px; font-weight: bold; color: #002060; margin-bottom: 0px;">🏗️ Post-Tender Department Management Dashboard</h1>', unsafe_allow_html=True)
+        st.markdown('<hr style="border: 1px solid #002060; margin-top: 5px; margin-bottom: 20px;">', unsafe_allow_html=True)
 
         df_home = pd.DataFrame(projects)
         
@@ -582,15 +582,14 @@ elif st.session_state.current_page == 'dashboard':
 
 # --- PAGE 3: BUILT UP AREA ---
 elif st.session_state.current_page == 'area':
-    if st.button("⬅️ Back"):
-        st.session_state.current_page = 'landing'
-        st.rerun()
-
-    st.markdown('<div class="main-title">📐 Built-up Area Summary</div>', unsafe_allow_html=True)
     
-    # CSS for Area Table
-    st.markdown("<style>.area-table { width: 100%; border-collapse: collapse; } .area-table th { background-color: #002060 !important; color: white; }</style>", unsafe_allow_html=True)
-    # 1. SARE PROJECTS KE BLOCKS
+    # Session State handle karne ke liye (Detail View logic)
+    if 'area_view_mode' not in st.session_state:
+        st.session_state.area_view_mode = 'table'
+    if 'selected_project' not in st.session_state:
+        st.session_state.selected_project = None
+
+    # 1. SARE PROJECTS KE BLOCKS (Aapka Original Block)
     projects_list = [
         {
         "Sr.no": 1, "Project Name": "ADMIN BUILDING, RATNAGIRI", 
@@ -654,44 +653,86 @@ elif st.session_state.current_page == 'area':
         }
     ]
 
-    st.subheader("📊 Master Summary")
-    df_area_sum = pd.DataFrame(projects_list)[["Sr.no", "Project Name", "Area sq.m"]]
-    st.markdown(df_area_sum.to_html(index=False, classes='area-table'), unsafe_allow_html=True)
-    
-    st.markdown("---")
+    # --- CASE A: AGAR DETAIL VIEW MEIN HAIN (EXCEL SHEET VIEW) ---
+    if st.session_state.area_view_mode == 'detail' and st.session_state.selected_project:
+        if st.button("⬅️ Back"):
+            st.session_state.area_view_mode = 'table'
+            st.session_state.selected_project = None
+            st.rerun()
 
-    # --- UPDATED SELECTION AREA (JUST LIKE DASHBOARD) ---
-    st.subheader("🔍 Select Project")
-    selected_p = st.selectbox(
-        label="", 
-        options=["-- Choose Project --"] + [p["Project Name"] for p in projects_list],
-        label_visibility="collapsed"
-    )
+        st.title(f"📐 Detailed Area View: {st.session_state.selected_project}")
+        st.markdown(f'<h2 style="font-size: 24px;">📐 Detailed Area View: {st.session_state.selected_project}</h2>', unsafe_allow_html=True)
 
-    # Baki logic wahi hai jo kaam kar raha tha
-    if selected_p != "-- Choose Project --":
         try:
-            link = next(p["Sheet_Link"] for p in projects_list if p["Project Name"] == selected_p)
-            url = link.split('/edit')[0] + "/export?format=csv"
+            # Selected project ka link nikalna
+            link = next(p["Sheet_Link"] for p in projects_list if p["Project Name"] == st.session_state.selected_project)
+            csv_url = link.split('/edit')[0] + "/export?format=csv"
             
-            raw = pd.read_csv(url, header=None).head(20)
-            ai = 0
-            for i, r in raw.iterrows():
-                r_s = " ".join(r.astype(str)).lower()
-                if any(k in r_s for k in ["description", "particular", "area", "sq.m", "sqft"]):
-                    ai = i
+            # Header dhundne ka logic
+            raw_data = pd.read_csv(csv_url, header=None).head(20)
+            h_idx = 0
+            for i, row in raw_data.iterrows():
+                row_str = " ".join(row.astype(str)).lower()
+                if any(kw in row_str for kw in ["description", "particular", "area", "sq.m", "sqft"]):
+                    h_idx = i
                     break
             
-            df_a_detail = pd.read_csv(url, skiprows=ai)
-            df_a_detail.columns = [str(c).strip() for c in df_a_detail.columns]
+            df_detail = pd.read_csv(csv_url, skiprows=h_idx)
+            df_detail.columns = [str(c).strip() for c in df_detail.columns]
             
-            a_cols = [c for c in df_a_detail.columns if any(x in c.lower() for x in ['sr', 'desc', 'particular', 'area', 'sqm', 'sqft'])]
+            # Relevant columns filter karna
+            a_cols = [c for c in df_detail.columns if any(x in c.lower() for x in ['sr', 'desc', 'particular', 'area', 'sqm', 'sqft'])]
             
             if len(a_cols) >= 2:
-                df_f = df_a_detail[a_cols].dropna(subset=[a_cols[1]]).copy()
-                st.markdown(f"#### 📐 Detailed View: {selected_p}")
-                st.markdown(df_f.to_html(index=False, classes='area-table'), unsafe_allow_html=True)
+                df_f = df_detail[a_cols].dropna(subset=[a_cols[1]]).copy()
+                st.dataframe(df_f, use_container_width=True, hide_index=True)
             else:
                 st.warning("Area details columns nahi mile.")
         except Exception as e:
             st.error(f"Area Error: {e}")
+
+    # --- CASE B: AGAR MASTER SUMMARY MEIN HAIN (TABLE VIEW) ---
+    else:
+        if st.button("⬅️ Back"):
+            st.session_state.current_page = 'landing'
+            st.rerun()
+
+        # Purani lines:
+# st.markdown('<div class="main-title">📐 Built-up Area Summary</div>', unsafe_allow_html=True)
+# st.markdown("---")
+
+# Naya updated code (Size chota aur clean):
+        st.markdown('<h2 style="font-size: 24px !important; font-weight: bold; color: #002060; margin-bottom: 5px;">📐 Built-up Area Summary</h2>', unsafe_allow_html=True)
+        st.markdown('<hr style="border: 1px solid #002060; margin-top: 0px; margin-bottom: 20px;">', unsafe_allow_html=True)
+
+        # Master Summary Table
+        st.subheader("📊 Master Summary")
+        df_area_sum = pd.DataFrame(projects_list)[["Sr.no", "Project Name", "Area sq.m"]]
+
+        # Styling
+        styled_area_df = df_area_sum.style.set_table_styles([
+            {'selector': 'th', 'props': [('background-color', '#002060'), ('color', 'white'), ('font-size', '18px'), ('text-align', 'center'), ('font-weight', 'bold')]},
+            {'selector': 'td', 'props': [('font-size', '16px'), ('padding', '10px')]}
+        ])
+        
+        # Dynamic height to remove blank cells
+        dynamic_height = (len(df_area_sum) * 35.2) + 38
+
+        # Interactive Table
+        event = st.dataframe(
+            styled_area_df,
+            use_container_width=True,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+            height=int(dynamic_height)
+        )
+
+        # Row Selection Logic (Isse naya page khulega)
+        if len(event.selection.rows) > 0:
+            selected_row_index = event.selection.rows[0]
+            project_to_open = df_area_sum.iloc[selected_row_index]["Project Name"]
+            
+            st.session_state.selected_project = project_to_open
+            st.session_state.area_view_mode = 'detail'
+            st.rerun()
