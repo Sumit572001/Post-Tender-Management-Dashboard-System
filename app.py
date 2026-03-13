@@ -24,25 +24,33 @@ st.markdown("""
     }
 
     /* 2. TABLE FONT & HIGHLIGHTING (Red/Blue Circle Fix) */
-    /* st.table use karne par ye font 100% kaam karega */
     
-    /* Table Headers (Red Circle) */
+    /* --- NEW ADDITION: st.dataframe Headers Highlight (Red Circle Fix) --- */
+    [data-testid="stDataFrame"] div[data-testid="stTableData"] > div:first-child,
+    [data-testid="stDataFrame"] table thead tr th,
+    div[data-testid="stTableData"] th {
+        background-color: #002366 !important;
+        color: white !important;
+        font-weight: bold !important;
+    }
+
+    /* Table Headers for st.table (Red Circle) */
     [data-testid="stTable"] thead tr th {
         background-color: #002366 !important;
         color: white !important;
-        font-size: 28px !important; /* Bada font size headings ke liye */
+        font-size: 20px !important; 
         font-weight: 800 !important;
         text-align: center !important;
-        padding: 20px !important;
+        padding: 15px !important;
     }
 
     /* Table Data/Rows (Blue Circle) */
     [data-testid="stTable"] tbody td {
-        font-size: 24px !important; /* Bada font size Excel data ke liye */
+        font-size: 18px !important; 
         font-weight: 600 !important;
         color: #000000 !important;
-        padding: 15px !important;
-        background-color: rgba(255, 255, 255, 0.7) !important; /* Halka white background readability ke liye */
+        padding: 10px !important;
+        background-color: rgba(255, 255, 255, 0.7) !important;
     }
 
     /* 3. LANDING PAGE TITLES */
@@ -66,26 +74,26 @@ st.markdown("""
 
     /* 4. BUTTONS & BOXES - FIXED CENTER */
     [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    justify-content: center !important; 
-    align-items: center !important;
-    gap: 15px !important; /* Gap aur kam kar diya */
-    width: 80% !important; /* Container ki width limit ki taaki center ho sake */
-    margin: 0 auto !important; /* Ye sabse zaroori hai center karne ke liye */
-}
+        display: flex !important;
+        justify-content: center !important; 
+        align-items: center !important;
+        gap: 15px !important; 
+        width: 80% !important; 
+        margin: 0 auto !important; 
+    }
 
     div.stButton > button {
-    width: 200px !important; 
-    height: 60px !important; 
-    border-radius: 20px !important;
-    border: 3px solid #002366 !important; 
-    background-color: #f0f2f6 !important;
-    color: #002366 !important;
-    transition: 0.4s;
-}
+        width: 200px !important; 
+        height: 60px !important; 
+        border-radius: 20px !important;
+        border: 3px solid #002366 !important; 
+        background-color: #f0f2f6 !important;
+        color: #002366 !important;
+        transition: 0.4s;
+    }
 
     div.stButton > button p {
-        font-size: 20px !important; /* Font size 40px se 28px kiya */
+        font-size: 20px !important; 
         font-weight: 400 !important;
         line-height: 1.2 !important;
     }
@@ -464,9 +472,16 @@ elif st.session_state.current_page == 'dashboard':
             st.session_state.selected_project = None
             st.rerun()
 
-        st.title(f"📊 Detailed View: {st.session_state.selected_project}")
-        st.markdown("---")
-
+        # --- Updated Small Heading with Thin Divider ---
+        st.markdown(f"""
+            <div style="margin-top: -15px;">
+                <h3 style="font-size: 26px; color: #002366; font-weight: bold; margin-bottom: 5px;">
+                    📊 Detailed View: {st.session_state.selected_project}
+                </h3>
+                <hr style="border: 0.5px solid #002366; opacity: 0.3; margin-top: 0px; margin-bottom: 20px;">
+            </div>
+        """, unsafe_allow_html=True)
+        
         # Aapka Original Excel Loading Logic
         df_home = pd.DataFrame(projects)
         project_data = df_home[df_home["Project Name"] == st.session_state.selected_project].iloc[0]
@@ -660,7 +675,7 @@ elif st.session_state.current_page == 'area':
             st.session_state.selected_project = None
             st.rerun()
 
-        st.title(f"📐 Detailed Area View: {st.session_state.selected_project}")
+        # st.title(f"📐 Detailed Area View: {st.session_state.selected_project}")
         st.markdown(f'<h2 style="font-size: 24px;">📐 Detailed Area View: {st.session_state.selected_project}</h2>', unsafe_allow_html=True)
 
         try:
